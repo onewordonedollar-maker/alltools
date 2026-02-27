@@ -249,14 +249,23 @@ export default function ProfitCalculatorPage() {
                     </td>
                     <td className="border px-2 py-1 text-xs whitespace-nowrap">
                       {item.亚马逊主图 ? (
-                        <a
-                          href={item.亚马逊主图}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          查看图片
-                        </a>
+                        data.length <= 50 ? (
+                          <img
+                            src={item.亚马逊主图}
+                            alt="商品主图"
+                            className="w-12 h-12 object-cover cursor-pointer rounded"
+                            onClick={() => window.open(item.亚马逊主图, '_blank')}
+                          />
+                        ) : (
+                          <a
+                            href={item.亚马逊主图}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            查看图片
+                          </a>
+                        )
                       ) : (
                         '-'
                       )}
