@@ -258,7 +258,7 @@ export function exportToExcel(data: ProductData[], filename: string = '利润计
       { f: `=W${rowNumber}/I${rowNumber}`, z: '0.00' }, // J列: 产品成本公式
       { f: `=H${rowNumber}*0.15`, z: '0.00' }, // K列: AMZ佣金公式
       item.VAT || 0, // L列
-      { f: `=Y${rowNumber}/I${rowNumber}*Z${rowNumber}`, z: '0.00' }, // M列: 头程成本公式
+      { f: `=X${rowNumber}/I${rowNumber}*Y${rowNumber}`, z: '0.00' }, // M列: 头程成本公式
       item.FBA费 || 0, // N列
       item.FBA仓储费 || 0, // O列
       { f: `=H${rowNumber}*0.20`, z: '0.00' }, // P列: 站内广告公式
@@ -270,7 +270,7 @@ export function exportToExcel(data: ProductData[], filename: string = '利润计
       { f: `=U${rowNumber}/H${rowNumber}`, z: '0.00%' }, // V列: 不含广利润率公式
       item.产品成本RMB || 0, // W列
       item.头程单价 || 0, // X列
-      { f: `=AA${rowNumber}*0.454`, z: '0.00' }, // Y列: 头程重量公式
+      { f: `=Z${rowNumber}*0.454`, z: '0.00' }, // Y列: 头程重量公式
       item.包装重量_lb || 0, // Z列
       item.数据缺失, // AA列
     ];
