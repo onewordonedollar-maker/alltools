@@ -248,7 +248,7 @@ export function exportToExcel(data: ProductData[], filename: string = '利润计
     return [
       item.亚马逊主图, // A列
       item.商品主图链接, // B列
-      { f: `=B${rowNumber}`, t: 's' }, // C列: IMAG读取公式
+      { f: `=IMAGE(B${rowNumber},"",3,50,50)`, t: 's' }, // C列: IMAG读取公式
       item.类目, // D列
       item.站点, // E列
       item.产品名, // F列
