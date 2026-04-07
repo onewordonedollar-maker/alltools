@@ -1,0 +1,17 @@
+/** @type {import('next').NextConfig} */
+const path = require('path');
+
+const nextConfig = {
+  allowedDevOrigins: ['*.dev.coze.site'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lf-coze-web-cdn.coze.cn',
+        pathname: '/**',
+      },
+    ],
+  },
+};
+
+module.exports = nextConfig;
