@@ -1,5 +1,5 @@
 {
-  "name": "projects",
+  "name": "cross-border-tools",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -83,7 +83,7 @@
     "react-dev-inspector": "^2.0.1",
     "shadcn": "latest",
     "tailwindcss": "^4",
-    "typescript": "^5.7.3"
+    "typescript": "^5"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {

@@ -13,13 +13,13 @@ interface Tool {
 
 const tools: Tool[] = [
   {
-    name: '利润计算器',
+    name: 'AMZ利润快算',
     path: '/tools/profit-calculator',
     icon: <LayoutDashboard className="h-4 w-4" />,
   },
   {
-    name: '预留工具1',
-    path: '/tools/future-tool-1',
+    name: 'WB 利润快算',
+    path: '/tools/wb-profit-calculator',
     icon: <LayoutDashboard className="h-4 w-4" />,
   },
   {

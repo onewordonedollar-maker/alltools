@@ -6,14 +6,16 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: '小工具集合',
-    template: '%s | 小工具集合',
+    default: '跨境工具合集',
+    template: '%s | 跨境工具合集',
   },
-  description: '实用小工具集合，包含利润计算器等工具',
+  description: '亚马逊选品/运营重要提效小工具合集，包含利润计算器等工具',
   keywords: [
-    '小工具',
+    '跨境工具',
+    '亚马逊',
     '利润计算器',
     'Excel工具',
+    '选品工具',
   ],
   authors: [{ name: 'Vibe Coding' }],
   generator: 'Vibe Coding',

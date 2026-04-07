@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, Download, AlertCircle, CheckCircle, FileSpreadsheet } from 'lucide-react';
 import type { WBProfitData } from './types';
 import { DEFAULT_VALUES } from './types';
-import { parseSourceExcel, batchCalculateWBProfit, matchCommissionRate } from './calculator';
+import { parseSourceExcel, batchCalculateWBProfit, parseCommissionRateExcel, type CommissionRateMap } from './calculator';
 import { exportWBProfitTable } from './exporter';
 
 export default function WBProfitCalculatorPage() {
@@ -18,7 +18,10 @@ export default function WBProfitCalculatorPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>('');
+  const [commissionFileName, setCommissionFileName] = useState<string>('');
+  const [commissionMap, setCommissionMap] = useState<CommissionRateMap | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const commissionFileInputRef = useRef<HTMLInputElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const topScrollbarRef = useRef<HTMLDivElement>(null);
   const bottomScrollbarRef = useRef<HTMLDivElement>(null);
@@ -141,16 +144,21 @@ export default function WBProfitCalculatorPage() {
         return;
       }
 
-      // 自动匹配佣金率
-      const sourceDataWithCommission = sourceData.map(item => ({
-        ...item,
-        平台佣金率: matchCommissionRate(item.类目 || ''),
-      }));
-
-      // 批量计算利润
-      const calculatedData = batchCalculateWBProfit(sourceDataWithCommission, globalSettings);
+      // 批量计算利润（佣金率自动匹配）
+      const calculatedData = batchCalculateWBProfit(
+        sourceData,
+        { ...globalSettings, 平台佣金率: undefined }, // 不传递全局佣金率，使用自动匹配
+        commissionMap || undefined
+      );
       setData(calculatedData);
-      setSuccessMessage(`成功导入 ${calculatedData.length} 条数据`);
+
+      // 统计未匹配的数量
+      const unmatchedCount = calculatedData.filter(item => !item.佣金率匹配成功).length;
+      if (unmatchedCount > 0) {
+        setSuccessMessage(`成功导入 ${calculatedData.length} 条数据，${unmatchedCount} 条类目未匹配佣金率（显示0%，已标红）`);
+      } else {
+        setSuccessMessage(`成功导入 ${calculatedData.length} 条数据，所有类目均匹配成功`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '导入失败，请检查文件格式');
     } finally {
@@ -158,6 +166,70 @@ export default function WBProfitCalculatorPage() {
       // 重置文件输入
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 处理佣金率文件上传
+  const handleCommissionFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const map = await parseCommissionRateExcel(file);
+
+      if (map.russianMap.size === 0 && map.chineseMap.size === 0) {
+        setError('佣金率Excel文件中没有有效数据');
+        setLoading(false);
+        return;
+      }
+
+      setCommissionFileName(file.name);
+      setCommissionMap(map);
+
+      // 如果已有数据，重新计算
+      if (data.length > 0) {
+        const recalculatedData = batchCalculateWBProfit(
+          data.map(item => ({
+            主图: item.主图,
+            类目: item.类目,
+            标题: item.标题,
+            详情页地址: item.详情页地址,
+            品牌: item.品牌,
+            售价卢布: item.售价卢布,
+            产品成本RMB: item.产品成本RMB,
+            FBW配送费: item.FBW配送费 / item.汇率, // 转换回卢布
+            毛重KG: item.毛重KG,
+            包装长cm: item.包装长cm,
+            包装宽cm: item.包装宽cm,
+            包装高cm: item.包装高cm,
+          })),
+          globalSettings,
+          map
+        );
+        setData(recalculatedData);
+
+        // 统计未匹配的数量
+        const unmatchedCount = recalculatedData.filter(item => !item.佣金率匹配成功).length;
+        if (unmatchedCount > 0) {
+          setSuccessMessage(`佣金率表已加载（${map.russianMap.size + map.chineseMap.size}条），${unmatchedCount} 条类目未匹配，显示0%并标红`);
+        } else {
+          setSuccessMessage(`佣金率表已加载（${map.russianMap.size + map.chineseMap.size}条），所有类目均匹配成功`);
+        }
+      } else {
+        setSuccessMessage(`佣金率表已加载（${map.russianMap.size + map.chineseMap.size}条）`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '佣金率文件导入失败，请检查文件格式');
+    } finally {
+      setLoading(false);
+      // 重置文件输入
+      if (commissionFileInputRef.current) {
+        commissionFileInputRef.current.value = '';
       }
     }
   };
@@ -185,13 +257,14 @@ export default function WBProfitCalculatorPage() {
         品牌: item.品牌,
         售价卢布: item.售价卢布,
         产品成本RMB: item.产品成本RMB,
-        FBW配送费: item.FBW配送费,
+        FBW配送费: item.FBW配送费 / item.汇率, // 转换回卢布
         毛重KG: item.毛重KG,
         包装长cm: item.包装长cm,
         包装宽cm: item.包装宽cm,
         包装高cm: item.包装高cm,
       })),
-      globalSettings
+      { ...globalSettings, 平台佣金率: undefined }, // 不传递全局佣金率，使用自动匹配
+      commissionMap || undefined
     );
     setData(updatedData);
   };
@@ -201,6 +274,12 @@ export default function WBProfitCalculatorPage() {
     // 只更新显示值，不触发计算
     setData(prevData => prevData.map(item => {
       if (item.id !== id) return item;
+
+      // 平台佣金率：输入的是百分数，需要转换为小数存储
+      if (field === '平台佣金率') {
+        return { ...item, [field]: value / 100 };
+      }
+
       return { ...item, [field]: value };
     }));
   };
@@ -208,8 +287,6 @@ export default function WBProfitCalculatorPage() {
   const handleInputBlur = (id: number, field: keyof WBProfitData, value: number) => {
     // 鼠标移开后触发计算
     setData(prevData => {
-      const targetRow = prevData.find(item => item.id === id);
-
       return batchCalculateWBProfit(
         prevData.map(item => ({
           id: item.id,
@@ -220,7 +297,7 @@ export default function WBProfitCalculatorPage() {
           品牌: item.品牌,
           售价卢布: item.id === id && field === '售价卢布' ? value : item.售价卢布,
           产品成本RMB: item.id === id && field === '产品成本RMB' ? value : item.产品成本RMB,
-          FBW配送费: item.FBW配送费,
+          FBW配送费: item.FBW配送费 / item.汇率, // 转换回卢布
           毛重KG: item.毛重KG,
           包装长cm: item.包装长cm,
           包装宽cm: item.包装宽cm,
@@ -228,9 +305,17 @@ export default function WBProfitCalculatorPage() {
         })),
         {
           汇率: item => item.id === id && field === '汇率' ? value : (item.汇率 ?? globalSettings.汇率),
-          平台佣金率: item => item.id === id && field === '平台佣金率' ? value : (item.平台佣金率 ?? 0),
+          平台佣金率: (item) => {
+            // 如果正在编辑平台佣金率，使用用户输入的值
+            if (item.id === id && field === '平台佣金率') {
+              return value; // 用户手动输入的值（已转换为小数）
+            }
+            // 否则使用自动匹配
+            return undefined as unknown as number;
+          },
           头程单价: item => item.id === id && field === '头程单价' ? value : (item.头程单价 ?? globalSettings.头程单价),
-        }
+        },
+        commissionMap || undefined
       ).map((item, index) => ({ ...item, id: prevData[index].id }));
     });
   };
@@ -255,6 +340,17 @@ export default function WBProfitCalculatorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
+      <style>{`
+        /* 隐藏数字输入框的上下箭头 */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
       <div className="max-w-[95vw] mx-auto">
         {/* 主功能卡片 */}
         <Card className="mb-6">
@@ -269,30 +365,67 @@ export default function WBProfitCalculatorPage() {
                 </div>
                 <div className="flex gap-2">
                   <span className="text-slate-500 dark:text-slate-500">2.</span>
-                  <span>系统根据类目自动匹配佣金率，也可在表格中单独修改<strong>汇率/头程单价</strong></span>
+                  <span>（推荐）上传佣金率表，系统自动匹配类目佣金率（支持双重匹配：俄文→中文→默认0%）</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-slate-500 dark:text-slate-500">3.</span>
+                  <span>修改<strong>汇率/头程单价</strong>后自动应用到所有行，也可在表格中单独修改</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-slate-500 dark:text-slate-500">4.</span>
+                  <span><strong>浅红色背景</strong>表示该行类目未匹配到佣金率，显示0%</span>
                 </div>
               </div>
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4 items-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <Button onClick={() => fileInputRef.current?.click()} className="gap-2" disabled={loading}>
-                <Upload className="w-4 h-4" />
-                {loading ? '导入中...' : '上传Excel文件'}
-              </Button>
-              {fileName && (
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  {fileName}
-                </span>
-              )}
+            <div className="flex flex-wrap gap-4 items-center">
+              {/* 主数据上传 */}
+              <div className="flex gap-4 items-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button onClick={() => fileInputRef.current?.click()} className="gap-2" disabled={loading}>
+                  <Upload className="w-4 h-4" />
+                  {loading ? '导入中...' : '上传商品Excel文件'}
+                </Button>
+                {fileName && (
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    {fileName}
+                  </span>
+                )}
+              </div>
+
+              {/* 佣金率表上传 */}
+              <div className="flex gap-4 items-center">
+                <input
+                  ref={commissionFileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleCommissionFileUpload}
+                  className="hidden"
+                />
+                <Button onClick={() => commissionFileInputRef.current?.click()} className="gap-2" variant="outline" disabled={loading}>
+                  <FileSpreadsheet className="w-4 h-4" />
+                  {loading ? '加载中...' : '上传佣金率表'}
+                </Button>
+                {commissionFileName && (
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    {commissionFileName}
+                  </span>
+                )}
+                {!commissionFileName && (
+                  <span className="text-xs text-muted-foreground">（推荐，支持7300+类目自动匹配，未匹配将显示0%）</span>
+                )}
+              </div>
+
+              {/* 导出按钮 */}
               {data.length > 0 && (
                 <Button onClick={handleExport} className="gap-2" variant="outline">
                   <Download className="w-4 h-4" />
@@ -510,18 +643,22 @@ export default function WBProfitCalculatorPage() {
                         <TableCell>{formatNumber(item.买方银行收单关税)}</TableCell>
                         <TableCell>{formatNumber(item.广告费)}</TableCell>
                         <TableCell>{formatNumber(item.FBW配送费)}</TableCell>
-                        <TableCell className="bg-blue-50 min-w-[100px]">
+                        <TableCell
+                          className={`bg-blue-50 ${
+                            !item.佣金率匹配成功 ? 'bg-red-100' : ''
+                          }`}
+                          title={item.佣金率匹配成功 ? '佣金率匹配成功' : '未匹配到类目，显示0%'}
+                        >
                           <div className="flex items-center gap-1">
                             <Input
                               type="number"
                               step="0.1"
-                              value={item.平台佣金率}
+                              value={(item.平台佣金率 * 100).toFixed(1)}
                               onChange={(e) => handleInputChange(item.id, '平台佣金率', parseFloat(e.target.value) || 0)}
-                              onBlur={(e) => handleInputBlur(item.id, '平台佣金率', parseFloat(e.target.value) || 0)}
-                              className={`w-16 h-8 ${item.平台佣金率 === 0 ? 'bg-red-100 border-red-300' : ''}`}
-                              style={{ appearance: 'none', MozAppearance: 'textfield', WebkitAppearance: 'none' }}
+                              onBlur={(e) => handleInputBlur(item.id, '平台佣金率', (parseFloat(e.target.value) || 0) / 100)}
+                              className={`w-16 h-8 ${!item.佣金率匹配成功 ? 'bg-red-100' : ''}`}
                             />
-                            <span className="text-xs text-slate-600">%</span>
+                            <span className="text-xs text-muted-foreground">%</span>
                           </div>
                         </TableCell>
                         <TableCell>{formatNumber(item.平台佣金)}</TableCell>

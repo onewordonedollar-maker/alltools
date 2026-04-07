@@ -135,14 +135,3 @@
 body {
   @apply font-sans;
 }
-
-/* 隐藏所有number输入框的上下微调箭头 */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
-}

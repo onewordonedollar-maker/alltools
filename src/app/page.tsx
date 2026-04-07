@@ -8,9 +8,9 @@ export default function Home() {
       <div className="max-w-4xl space-y-8">
         {/* 欢迎标题 */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">欢迎使用小工具集合</h1>
+          <h1 className="text-4xl font-bold">欢迎使用跨境工具合集</h1>
           <p className="text-lg text-muted-foreground">
-            选择一个工具开始使用
+            亚马逊选品/运营重要提效小工具合集
           </p>
         </div>
 
@@ -25,7 +25,7 @@ export default function Home() {
                     <Calculator className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">利润计算器</h3>
+                    <h3 className="text-xl font-semibold">选品利润快算</h3>
                     <p className="text-sm text-muted-foreground">
                       上传Excel表格，快速计算产品利润，支持多维度费用分析和导出
                     </p>
