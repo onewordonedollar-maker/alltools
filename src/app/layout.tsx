@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { Inspector } from 'react-dev-inspector';
 import { Sidebar } from '@/components/shared/Sidebar';
 import { Header } from '@/components/shared/Header';
+import { Inspector } from '@/components/shared/Inspector';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -30,21 +30,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isDev = process.env.NODE_ENV === 'development';
-
   return (
     <html lang="zh-CN">
       <body className="antialiased">
-        {isDev && <Inspector />}
+        <Inspector />
         <div className="flex h-screen flex-col overflow-hidden">
           {/* 顶部导航栏 */}
           <Header />
-          
+
           {/* 主体内容区 */}
           <div className="flex flex-1 overflow-hidden">
             {/* 左侧边栏 */}
             <Sidebar />
-            
+
             {/* 右侧内容区 */}
             <main className="flex-1 overflow-auto">
               {children}
