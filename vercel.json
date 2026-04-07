@@ -1,0 +1,10 @@
+{
+  "buildCommand": "pnpm install && pnpm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "pnpm install --prefer-frozen-lockfile",
+  "devCommand": "pnpm run dev",
+  "env": {
+    "COZE_PROJECT_DOMAIN_DEFAULT": "@coze_project_domain_default"
+  }
+}
