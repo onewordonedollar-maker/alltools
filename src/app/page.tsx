@@ -8,9 +8,9 @@ export default function Home() {
       <div className="max-w-4xl space-y-8">
         {/* 欢迎标题 */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">欢迎使用跨境工具合集</h1>
+          <h1 className="text-4xl font-bold">跨境利润计算工具</h1>
           <p className="text-lg text-muted-foreground">
-            亚马逊选品/运营重要提效小工具合集
+            上传 Excel，自动计算利润并导出结果
           </p>
         </div>
 
@@ -27,7 +27,7 @@ export default function Home() {
                   <div>
                     <h3 className="text-xl font-semibold">选品利润快算</h3>
                     <p className="text-sm text-muted-foreground">
-                      上传Excel表格，快速计算产品利润，支持多维度费用分析和导出
+                      适用于 Amazon 场景，支持上传、计算、编辑和导出
                     </p>
                   </div>
                 </div>
@@ -39,20 +39,28 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* 预留工具卡片 */}
-          <div className="rounded-lg border border-dashed p-6 opacity-50">
-            <div className="space-y-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-                <Calculator className="h-6 w-6 text-muted-foreground" />
+          {/* WB利润工具卡片 */}
+          <Link href="/tools/wb-profit-calculator">
+            <div className="group rounded-lg border p-6 transition-all hover:border-primary hover:shadow-md">
+              <div className="flex items-start justify-between">
+                <div className="space-y-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                    <Calculator className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold">WB 利润快算</h3>
+                    <p className="text-sm text-muted-foreground">
+                      适用于 Wildberries 场景，支持佣金率匹配与利润测算
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
               </div>
-              <div>
-                <h3 className="text-xl font-semibold">更多工具</h3>
-                <p className="text-sm text-muted-foreground">
-                  敬请期待更多实用工具...
-                </p>
-              </div>
+              <Button className="mt-4 w-full" variant="outline">
+                立即使用
+              </Button>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

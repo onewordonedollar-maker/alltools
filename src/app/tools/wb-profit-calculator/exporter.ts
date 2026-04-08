@@ -1,6 +1,8 @@
 import * as XLSX from 'xlsx';
 import type { WBProfitData } from './types';
 
+type ExcelCell = string | number | Record<string, unknown>;
+
 /**
  * 获取Excel列字母（0->A, 1->B, ..., 25->Z, 26->AA, ...）
  */
@@ -74,12 +76,12 @@ export function exportWBProfitTable(data: WBProfitData[]): void {
   
   // 构建表头
   const header = columns;
-  const rows: any[][] = [header];
+  const rows: ExcelCell[][] = [header];
   
   // 构建数据行
   data.forEach((item, rowIndex) => {
     const rowNum = rowIndex + 2; // Excel行号（从1开始，表头是第1行）
-    const row: any[] = [];
+    const row: ExcelCell[] = [];
     
     // A - 导出表的格式（空）
     row.push('');

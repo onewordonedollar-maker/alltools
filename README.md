@@ -7,17 +7,27 @@
 软件架构说明
 
 
-#### 安装教程
+#### 本地运行
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1. 安装 Node.js 20+（推荐 20.11 及以上）
+2. 启用 pnpm（仓库使用 pnpm 锁文件）：
+   - `corepack enable`
+   - `corepack prepare pnpm@9.0.0 --activate`
+3. 安装依赖：`pnpm install`
+4. 启动开发：`pnpm dev`
+5. 生产构建：`pnpm build`
+6. 本地预览生产环境：`pnpm start`
 
-#### 使用说明
+#### Vercel 部署说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1. 将仓库推送到 GitHub/GitLab/Bitbucket
+2. 在 Vercel 中导入该仓库
+3. 使用默认 Framework（Next.js）
+4. 构建配置无需手填，仓库内 `vercel.json` 已指定：
+   - Install Command: `corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile`
+   - Build Command: `pnpm build`
+5. 点击 Deploy
+6. 首次部署成功后，后续每次推送会自动触发重新部署
 
 #### 参与贡献
 

@@ -32,7 +32,7 @@ export async function parseCommissionRateExcel(file: File): Promise<CommissionRa
           return;
         }
 
-        const workbook = XLSX.read(data, { type: 'array' } as any);
+        const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
@@ -126,6 +126,13 @@ export function calculateWBProfit(
     头程单价?: number;
   } = {}
 ): WBProfitData {
+  const matchedFlag =
+    typeof sourceData === 'object' &&
+    sourceData !== null &&
+    '佣金率匹配成功' in sourceData &&
+    typeof sourceData.佣金率匹配成功 === 'boolean'
+      ? sourceData.佣金率匹配成功
+      : true;
   // 获取源数据
   const 售价卢布 = Number(sourceData.售价卢布) || 0;
   const 产品成本RMB = Number(sourceData.产品成本RMB) || 0;
@@ -224,7 +231,7 @@ export function calculateWBProfit(
     汇率,
     平台佣金率,
     头程单价,
-    佣金率匹配成功: (sourceData as any).佣金率匹配成功 || true, // 默认为true（匹配成功）
+    佣金率匹配成功: matchedFlag, // 默认为true（匹配成功）
     // 计算字段
     售价RMB,
     产品成本含税价,
@@ -264,7 +271,7 @@ export async function parseSourceExcel(file: File): Promise<Partial<WBProfitData
           return;
         }
 
-        const workbook = XLSX.read(data, { type: 'array' } as any);
+        const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];

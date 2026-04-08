@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Local backup route kept for reference only.
+    'src/app/tools/profit-calculator.backup/**',
   ]),
 ]);
 

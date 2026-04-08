@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, Download, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Download, CheckCircle } from 'lucide-react';
 
 interface ProductData {
   id: number;
@@ -40,6 +40,9 @@ interface ProductData {
   不含广利润率: number;
   数据缺失: string;
 }
+
+type ExcelRow = Array<string | number | undefined | null>;
+type ExcelCell = string | number | Record<string, unknown>;
 
 export default function ProfitCalculator() {
   const [data, setData] = useState<ProductData[]>([]);
@@ -184,7 +187,7 @@ export default function ProfitCalculator() {
       const workbook = XLSX.read(data, { type: 'binary' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as ExcelRow[];
 
       // 读取表头行，建立列名到索引的映射
       const headers = jsonData[0] as string[];
@@ -196,11 +199,11 @@ export default function ProfitCalculator() {
       });
 
       // 根据列名获取值的辅助函数
-      const getColValue = (row: any[], colName: string, defaultValue: any = '') => {
+      const getColValue = <T extends string | number>(row: ExcelRow, colName: string, defaultValue: T): T => {
         const index = colIndexMap[colName];
         if (index === undefined) return defaultValue;
         const value = row[index];
-        return value !== undefined && value !== null && value !== '' ? value : defaultValue;
+        return value !== undefined && value !== null && value !== '' ? (value as T) : defaultValue;
       };
 
       // 跳过表头，从第二行开始
@@ -209,18 +212,18 @@ export default function ProfitCalculator() {
       const parsedData: ProductData[] = rows
         .map((row, index) => {
           // 列名匹配取值（不再使用硬编码索引）
-          const 主图 = getColValue(row, '商品主图', '');
-          const 类目 = getColValue(row, '大类目', '');
-          const 产品名 = getColValue(row, '商品标题', '');
-          const 产品链接 = getColValue(row, '商品详情页链接', '');
-          const 价格 = getColValue(row, '价格($)', 0);
-          const FBA费 = getColValue(row, 'FBA($)', 0);
-          const 包装重量Raw = getColValue(row, '包装重量', 0);
+          const 主图 = getColValue<string>(row, '商品主图', '');
+          const 类目 = getColValue<string>(row, '大类目', '');
+          const 产品名 = getColValue<string>(row, '商品标题', '');
+          const 产品链接 = getColValue<string>(row, '商品详情页链接', '');
+          const 价格 = getColValue<number>(row, '价格($)', 0);
+          const FBA费 = getColValue<number>(row, 'FBA($)', 0);
+          const 包装重量Raw = getColValue<string | number>(row, '包装重量', 0);
           // 去除单位，只保留数值
           const 包装重量 = typeof 包装重量Raw === 'string'
             ? parseFloat(包装重量Raw.replace(/[^\d.]/g, '')) || 0
             : 包装重量Raw;
-          const 包装尺寸单位换算 = getColValue(row, '包装尺寸（单位换算）', '');
+          const 包装尺寸单位换算 = getColValue<string>(row, '包装尺寸（单位换算）', '');
 
           // 计算体积重KG：从包装尺寸解析
           let 体积重KG = 0;
@@ -364,20 +367,18 @@ export default function ProfitCalculator() {
 
     // 构建表头
     const header = columnOrder;
-    const aoa: any[][] = [header];
+    const aoa: ExcelCell[][] = [header];
 
     // 构建数据行（带公式）
     data.forEach((item, rowIndex) => {
       const row = 2 + rowIndex; // Excel行号（从1开始，表头是第1行）
-      const rowData: any[] = [];
+      const rowData: ExcelCell[] = [];
 
       // 检查该行是否数据缺失（数据缺失列显示缺失字段名列表，如"实时售价本币、亚马逊主图"，不缺失则显示"否"）
       const isMissing = item.数据缺失 !== '否' && item.数据缺失 !== '';
 
       columnOrder.forEach((col) => {
         const value = item[col as keyof ProductData];
-        const colLetter = columns[col];
-
         // 特殊处理亚马逊主图列：添加超链接
         if (col === '亚马逊主图') {
           if (value && typeof value === 'string') {
@@ -483,7 +484,7 @@ export default function ProfitCalculator() {
     // 根据内容自动调整列宽
     const colWidths: { wch: number }[] = [];
 
-    columnOrder.forEach((col, colIndex) => {
+    columnOrder.forEach((col) => {
       // 计算表头长度
       let maxLength = String(col).length;
 
