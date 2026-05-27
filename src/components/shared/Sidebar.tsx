@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 
 interface Tool {
@@ -23,9 +23,9 @@ const tools: Tool[] = [
     icon: <LayoutDashboard className="h-4 w-4" />,
   },
   {
-    name: '预留工具2',
-    path: '/tools/future-tool-2',
-    icon: <LayoutDashboard className="h-4 w-4" />,
+    name: '词频统计',
+    path: '/tools/word-frequency',
+    icon: <BarChart3 className="h-4 w-4" />,
   },
 ];
 

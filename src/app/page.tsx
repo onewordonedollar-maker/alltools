@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Calculator } from 'lucide-react';
+import { ArrowRight, Calculator, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
@@ -8,14 +8,14 @@ export default function Home() {
       <div className="max-w-4xl space-y-8">
         {/* 欢迎标题 */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">跨境利润计算工具</h1>
+          <h1 className="text-4xl font-bold">跨境工具合集</h1>
           <p className="text-lg text-muted-foreground">
-            上传 Excel，自动计算利润并导出结果
+            利润计算、词频分析等运营提效小工具
           </p>
         </div>
 
         {/* 工具卡片 */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* 利润计算器卡片 */}
           <Link href="/tools/profit-calculator">
             <div className="group rounded-lg border p-6 transition-all hover:border-primary hover:shadow-md">
@@ -51,6 +51,28 @@ export default function Home() {
                     <h3 className="text-xl font-semibold">WB 利润快算</h3>
                     <p className="text-sm text-muted-foreground">
                       适用于 Wildberries 场景，支持佣金率匹配与利润测算
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+              </div>
+              <Button className="mt-4 w-full" variant="outline">
+                立即使用
+              </Button>
+            </div>
+          </Link>
+
+          <Link href="/tools/word-frequency">
+            <div className="group rounded-lg border p-6 transition-all hover:border-primary hover:shadow-md">
+              <div className="flex items-start justify-between">
+                <div className="space-y-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                    <BarChart3 className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold">词频统计</h3>
+                    <p className="text-sm text-muted-foreground">
+                      粘贴产品关键词，统计 1/2/3 词组合频率并导出 Excel
                     </p>
                   </div>
                 </div>
