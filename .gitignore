@@ -97,3 +97,6 @@ Desktop.ini
 .turbo
 
 .coze-logs
+
+# Local tooling (standalone pnpm, etc.)
+.tools/

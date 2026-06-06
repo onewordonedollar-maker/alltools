@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { analyzeWordFrequency, dedupeLines } from './analyzer';
-import { exportFrequencyToExcel } from './exporter';
+import { exportFrequencyToCsv } from './exporter';
 import type { NGramSize } from './types';
 
 const DEFAULT_TOP_N = 10;
@@ -46,11 +46,7 @@ export default function WordFrequencyPage() {
       alert('暂无词频数据可导出，请先粘贴关键词');
       return;
     }
-    exportFrequencyToExcel(result, ngramSize, {
-      caseSensitive,
-      excludeStopWords,
-      topN: Math.max(1, topN),
-    });
+    exportFrequencyToCsv(result, ngramSize);
   };
 
   const ngramLabel = ngramSize === 1 ? '一个单词' : ngramSize === 2 ? '两个单词' : '三个单词';

@@ -1,34 +1,22 @@
-import * as XLSX from 'xlsx';
 import type { AnalyzeResult, NGramSize } from './types';
 
-export function exportFrequencyToExcel(
-  result: AnalyzeResult,
-  ngramSize: NGramSize,
-  options: {
-    caseSensitive: boolean;
-    excludeStopWords: boolean;
-    topN: number;
+function escapeCsvField(value: string | number): string {
+  const str = String(value);
+  if (/[",\r\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
   }
-): void {
+  return str;
+}
+
+function rowsToCsv(rows: (string | number)[][]): string {
+  return rows.map((row) => row.map(escapeCsvField).join(',')).join('\r\n');
+}
+
+export function exportFrequencyToCsv(result: AnalyzeResult, ngramSize: NGramSize): void {
   const ngramLabel = ngramSize === 1 ? '单词' : ngramSize === 2 ? '双词' : '三词';
 
-  const summaryRows: (string | number)[][] = [
-    ['词频统计导出'],
-    [],
-    ['统计项', '数值'],
-    ['当前字符数', result.stats.字符数],
-    ['当前单词数', result.stats.单词数],
-    ['当前句子数', result.stats.句子数],
-    [],
-    ['分析设置', ''],
-    ['N-gram', ngramLabel],
-    ['区分大小写', options.caseSensitive ? '是' : '否'],
-    ['排除语法词', options.excludeStopWords ? '是' : '否'],
-    ['显示前 N 项', options.topN],
-  ];
-
   const frequencyRows: (string | number)[][] = [
-    ['排名', '词组', '出现次数', '占比(%)'],
+    ['排名', '词根', '词频', '占比(%)'],
     ...result.items.map((item) => [
       item.rank,
       item.phrase,
@@ -37,10 +25,12 @@ export function exportFrequencyToExcel(
     ]),
   ];
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(summaryRows), '统计概览');
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(frequencyRows), '词频明细');
-
-  const fileName = `词频统计_${ngramLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  XLSX.writeFile(workbook, fileName);
+  const csvContent = rowsToCsv(frequencyRows);
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `词频统计_${ngramLabel}_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronLeft, ChevronRight, LayoutDashboard, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
+import { APP_VERSION } from '@/lib/app-version';
 
 interface Tool {
   name: string;
@@ -70,6 +71,12 @@ export function Sidebar() {
             </Link>
           ))}
         </nav>
+
+        {!collapsed && (
+          <div className="border-t px-4 py-3 text-xs text-muted-foreground">
+            版本 v{APP_VERSION}
+          </div>
+        )}
       </div>
     </div>
   );
