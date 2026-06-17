@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, Download, CheckCircle } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 
 interface ProductData {
   id: number;
@@ -51,6 +51,7 @@ export default function ProfitCalculator() {
   const [globalFirstMilePrice, setGlobalFirstMilePrice] = useState<number>(6.5);
   const [editingCell, setEditingCell] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 列顺序定义（按照用户给定的序号顺序）
@@ -172,10 +173,12 @@ export default function ProfitCalculator() {
     };
   };
 
-  // 处理文件上传
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processExcelFile = (file: File) => {
+    const fileNameLower = file.name.toLowerCase();
+    if (!fileNameLower.endsWith('.xlsx') && !fileNameLower.endsWith('.xls')) {
+      alert('请上传 .xlsx 或 .xls 格式的Excel文件');
+      return;
+    }
 
     setFileName(file.name);
     const reader = new FileReader();
@@ -291,6 +294,35 @@ export default function ProfitCalculator() {
     };
 
     reader.readAsBinaryString(file);
+  };
+
+  // 处理文件上传
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processExcelFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    processExcelFile(file);
   };
 
   // 更新单元格数据
@@ -549,7 +581,15 @@ export default function ProfitCalculator() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4 items-center">
+            <div
+              className={`flex flex-col gap-3 rounded-lg px-0 py-1 transition-colors md:flex-row md:items-center md:justify-between ${
+                isDraggingFile ? 'bg-blue-50/60 dark:bg-blue-950/20' : 'bg-transparent'
+              }`}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <input
                 ref={fileInputRef}
                 type="file"
@@ -557,18 +597,23 @@ export default function ProfitCalculator() {
                 onChange={handleFileUpload}
                 className="hidden"
               />
-              <Button onClick={() => fileInputRef.current?.click()} className="gap-2">
-                <Upload className="w-4 h-4" />
-                上传Excel文件
-              </Button>
-              {fileName && (
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  {fileName}
+              <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+                <Button onClick={() => fileInputRef.current?.click()} className="w-fit gap-2">
+                  <Upload className="w-4 h-4" />
+                  上传Excel文件
+                </Button>
+                <span
+                  className={`inline-flex max-w-full truncate rounded-md border border-dashed px-4 py-2 text-sm text-muted-foreground transition-colors ${
+                    isDraggingFile
+                      ? 'border-blue-400 bg-blue-50/70 text-blue-700 dark:border-blue-500 dark:bg-blue-950/30 dark:text-blue-300'
+                      : 'border-slate-300 bg-transparent dark:border-slate-700'
+                  }`}
+                >
+                  {fileName ? `已上传：${fileName}` : '拖拽或点击按钮上传'}
                 </span>
-              )}
+              </div>
               {data.length > 0 && (
-                <Button onClick={exportToExcel} className="gap-2" variant="outline">
+                <Button onClick={exportToExcel} className="w-fit gap-2" variant="outline">
                   <Download className="w-4 h-4" />
                   导出Excel
                 </Button>
@@ -784,10 +829,6 @@ export default function ProfitCalculator() {
             </CardContent>
           </Card>
         )}
-        
-        <div className="text-center text-xs text-muted-foreground mt-6">
-          v1.3.4
-        </div>
       </div>
     </div>
   );
